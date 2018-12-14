@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>iMemory</title>
+  <link rel="stylesheet" href="app.css" />
+  <script src="app.js"></script>
+  <script src="scripts/echo.min.js"></script>
+</head>
+
+<body>
+  <template id="photo-template">
+    <div class="photo">
+      <img />
+    </div>
+  </template>
+
+  <div id="select_folder">
+    <span>Select a folder containing photos</span>
+  </div>
+  <input type="file" nwdirectory id="folderSelector" />
+
+  <script>
+    // You can also require other files to run in this process
+    require('./renderer.js')
+  </script>
+
+  <div id="photos"></div>
+  <div id="fullViewPhoto">
+    <div id="toolbar">
+      <div id="back" onclick="backToGridView();">Back</div>
+    </div>
+        <img />
+</div>
+</body>
+
+</html>
