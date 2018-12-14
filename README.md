@@ -1,6 +1,4 @@
-A sligtly changed clone of Paul Jensen's Photo Discovery in nw.js.
-
-It is based on the minimal Electron application based on the [Quick Start Guide](https://electronjs.org/docs/tutorial/quick-start) within the Electron documentation.
+A sligtly changed clone of Paul Jensen's Photo Discovery. But this one is based on the Electron Quick Start template.
 
 ## To Use
 
