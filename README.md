@@ -19,7 +19,7 @@ npm start
 
 ## Quick Start
 1. Select any file in a folder with image files
-2. The first 12 images in that folder will be display as thumbnails
+2. The first 12 images in that folder will be displayed as thumbnails
 3. Click on any thumbnail to see the full photo
 4. Click on the full photo will close it, or you can move the cursor to the top right to see the Back button which does the same
 5. Scroll to show additional photos if they are more than 12
