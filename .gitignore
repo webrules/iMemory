@@ -1,3 +1,8 @@
+samples/
+db/
+.DS_Store
+.thumbnails/
+
 # Logs
 logs
 *.log

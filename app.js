@@ -2,6 +2,8 @@
 var fs = require('fs');
 var mime = require('mime');    
 var path = require('path');
+var mkdirp = require('mkdirp');
+var Jimp = require('jimp');
 
 var imageMimeTypes = [
     'image/bmp',
@@ -15,19 +17,10 @@ var imageMimeTypes = [
     'image/x-windows-bmp'
 ];
 
-// function addImageToPhotosArea (file) {
-//     var photosArea = document.getElementById('photos');
-//     var template = document.querySelector('#photo-template');
-//     template.content.querySelector('img').src = file.path;
-//     template.content.querySelector('img').setAttribute('data-name',file.name);
-//     var clone = window.document.importNode(template.content, true);
-//     photosArea.appendChild(clone);
-// }
-
 function addImageToPhotosArea (file) {
     var photosArea = document.getElementById('photos');
     var template = document.querySelector('#photo-template');
-    template.content.querySelector('img').src = 'images/blank.png';
+    template.content.querySelector('img').src = 'images/blank.gif';
     template.content.querySelector('img').setAttribute('data-echo', file.path);
     template.content.querySelector('img').setAttribute('data-name',file.name);
     var clone = window.document.importNode(template.content, true);
@@ -40,7 +33,9 @@ function findImageFiles (files, folderPath, cb) {
         var fullFilePath = path.resolve(folderPath,file);
         var extension = mime.getType(fullFilePath);
         if (imageMimeTypes.indexOf(extension) !== -1) {
-            imageFiles.push({name: file, path: fullFilePath});
+            if (path.parse(fullFilePath).name.charAt(0)!=".") {
+                imageFiles.push({name: file, path: fullFilePath});
+            }
         }
         if (files.indexOf(file) === files.length-1) {
             cb(imageFiles);
@@ -49,8 +44,8 @@ function findImageFiles (files, folderPath, cb) {
 }
 
 function findAllFiles (folderPath, cb) {
-    fs.readdir(folderPath, function (err, files) {
-        console.log("folderPath ",folderPath);
+    filewalker(folderPath, function(err, files) {
+        // console.log("folderPath ",folderPath);
         if (err) { return cb(err, null); }
         cb(null, files);
     });
@@ -108,6 +103,81 @@ function displayPhotoInFullView (photo) {
     document.querySelector('#fullViewPhoto > img').setAttribute('data-name', fileName);
     document.querySelector('#fullViewPhoto').style.display = 'block';
 }
+function genThumbnails (fn) {
+    // console.log("gen thumbnail for ", fn);
+    newFileName(fn, function(fn, nfn) {
+        var dir = "./.thumbnails/" + nfn[0];
+        mkdirp(dir, function (err) {
+            if (err) console.error(err)
+            var newName = nfn[1];
+            console.log(dir, newName);
+
+            Jimp.read(fn)
+            .then(lenna => {
+              return lenna
+                .resize(512, 512) // resize
+                .quality(80) // set JPEG quality
+                .write(dir + "/" + newName); // save
+            })
+            .catch(err => {
+              console.error(err);
+            });            
+
+
+        });
+    });
+}
+
+async function newFileName(file, cb) {
+    var ExifImage = require('exif').ExifImage;
+
+    try {
+        new ExifImage({ image : file }, function (error, exifData) {
+            if (error) {
+                console.log('Error: '+error.message);
+            }
+            else {
+                var creationDateTime = "", creationDate = "",  creationTime = "", baseName = "";
+                var noExif = isEmpty(exifData.exif.DateTimeOriginal);
+                // console.log(exifData.exif.DateTimeOriginal);
+                if (noExif) {
+                    baseName = path.basename(file);
+                    var mtime = fs.statSync(file).mtime;
+                    creationDate =  toChinaDate(mtime);
+                    creationTime =  toChinaTime(mtime);
+                }
+                else {
+                    creationDateTime = exifData.exif.DateTimeOriginal.split(" ");
+                    creationDate = creationDateTime[0].replace(/:/g,"/");
+                    creationTime = creationDateTime[1].replace(/:/g, "_");
+                    }
+
+                var location = "";
+                if (!isEmpty(exifData.gps)) {
+                    location = exifData.gps.GPSLatitude.join("_") + "_" + exifData.gps.GPSLongitude.join("_");
+                }
+
+                var nfn = ""
+                if (noExif) {
+                    nfn =  baseName + "-" + creationTime + ".jpg";
+                }
+                else {
+                    nfn = creationTime + "-" + location + ".jpg";
+                }
+                // console.log(creationDate);
+                // console.log(nfn);
+
+                return cb(file, [creationDate, nfn]);
+            }
+        });
+    } catch (error) {
+        console.log('Error: ' + error.message, file);
+    }
+}
+
+function saveToDb (file) {
+    // console.log("save to db for ", file);
+}
 
 window.onload = function () {
     echo.init({
@@ -124,6 +194,8 @@ window.onload = function () {
                     // console.log(imageFiles);
                     imageFiles.forEach(function (file, index) {
                         addImageToPhotosArea(file);
+                        genThumbnails(file.name)
+                        saveToDb(file.name)
                         if (index === imageFiles.length-1) {
                             echo.render();
                             bindClickingOnAllPhotos();
