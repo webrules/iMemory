@@ -1,6 +1,6 @@
 {
   "name": "iMemory",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A local personal photo browser",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,6 @@
     "exif": "^0.6.0",
     "jimp": "^0.6.0",
     "mime": "^2.4.0",
-    "mkdirp": "^0.5.1",
-    "sqlite3": "^4.0.4"
+    "mkdirp": "^0.5.1"
   }
 }

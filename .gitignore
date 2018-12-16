@@ -1,7 +1,6 @@
 samples/
-db/
 .DS_Store
-.thumbnails/
+photos/
 
 # Logs
 logs
