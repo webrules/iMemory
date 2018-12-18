@@ -4,7 +4,8 @@
   "description": "A local personal photo browser",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "./node_modules/.bin/tape test/*.js"
   },
   "repository": "https://github.com/webrules/iMemory",
   "keywords": [
@@ -14,7 +15,8 @@
   "author": "webrules",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^3.0.7"
+    "electron": "^3.0.7",
+    "tape": "^4.9.1"
   },
   "dependencies": {
     "exif": "^0.6.0",

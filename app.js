@@ -5,18 +5,6 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const Jimp = require('jimp');
 
-var imageMimeTypes = [
-    'image/bmp',
-    'image/gif',
-    'image/jpeg',
-    'image/png',
-    'image/pjpeg',
-    'image/tiff',
-    'image/webp',
-    'image/x-tiff',
-    'image/x-windows-bmp'
-];
-
 function addImageToPhotosArea(file) {
     var photosArea = document.getElementById('photos');
     var template = document.querySelector('#photo-template');
@@ -25,31 +13,6 @@ function addImageToPhotosArea(file) {
     template.content.querySelector('img').setAttribute('data-name', file.name);
     var clone = window.document.importNode(template.content, true);
     photosArea.appendChild(clone);
-}
-
-function findImageFiles(files, folderPath, cb) {
-    var imageFiles = [];
-    files.forEach(function (file) {
-        var fullFilePath = path.resolve(folderPath, file);
-        var extension = mime.getType(fullFilePath);
-        if (imageMimeTypes.indexOf(extension) !== -1) {
-            if (path.parse(fullFilePath).name.charAt(0) != ".") {
-                imageFiles.push({ name: file, path: fullFilePath });
-            }
-        }
-        if (files.indexOf(file) === files.length - 1) {
-            cb(imageFiles);
-        }
-    });
-}
-
-function findAllFiles(folderPath, cb) {
-    // folderPath = "./.thumbnails"
-    filewalker(folderPath, function (err, files) {
-        console.log("folderPath ",folderPath);
-        if (err) { return cb(err, null); }
-        cb(null, files);
-    });
 }
 
 function hideSelectFolderButton() {
@@ -187,21 +150,6 @@ async function newFileName(file, cb) {
     }
 }
 
-// function saveToDb(src_pic, new_pic) {
-//     console.log("save to db for ", src_pic, new_pic);
-
-//     try {
-//         var sqlite3 = require('sqlite3').verbose();
-//         var db = new sqlite3.Database('./db/iMemory.db');
-         
-//         db.run("insert into photos (src_pic, new_pic) values (?,?) ", src_pic, new_pic);
-    
-//         db.close();    
-//     } catch(err) {
-//         console.log(err);
-//     }
-// }
-
 window.onload = function () {
     // lazy loading
     echo.init({
@@ -210,28 +158,35 @@ window.onload = function () {
         unload: false
     });
 
-    const isImport = false;
+    const isImport = true;
 
     bindSelectFolderClick(function (folderPath) {
         hideSelectFolderButton();
+
         if (!isImport) folderPath = "./photos/thumbnails";
-        findAllFiles(folderPath, function (err, files) {
-            if (!err) {
-                findImageFiles(files, folderPath, function (imageFiles) {
-                    // console.log(imageFiles);
-                    imageFiles.forEach(function (file, index) {
-                    addImageToPhotosArea(file);
-                        if (isImport) {
-                            organizePhotos(file.name);
-                            genThumbnails(file.name);
-                        }
-                        if (index === imageFiles.length - 1) {
-                            echo.render();
-                            bindClickingOnAllPhotos();
-                        }
-                    });
-                });
+        const util = require('./lib/util.js')
+
+        util.filewalker(folderPath, function (err, files) {
+            if (err) {
+                console.log(err);
+                return;
             }
+            
+            util.findImageFiles(files, folderPath, function (imageFiles) {
+                // console.log(imageFiles);
+                imageFiles.forEach(function (file, index) {
+                addImageToPhotosArea(file);
+                    if (isImport) {
+                        organizePhotos(file.name);
+                        genThumbnails(file.name);
+                    }
+                    if (index === imageFiles.length - 1) {
+                        echo.render();
+                        bindClickingOnAllPhotos();
+                    }
+                });
+            });
+            
         });
     });
 };
