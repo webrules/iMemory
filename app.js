@@ -4,6 +4,7 @@ const mime = require('mime');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const Jimp = require('jimp');
+const util = require('./lib/util.js')
 
 function addImageToPhotosArea(file) {
     var photosArea = document.getElementById('photos');
@@ -106,44 +107,39 @@ function genThumbnails(fn) {
 }
 
 async function newFileName(file, cb) {
-    var ExifImage = require('exif').ExifImage;
-
+    var noExif = false;
+    var creationDateTime="", creationDate="", creationTime="", baseName="";
+    var location="", nfn="";
+    
     try {
+        var ExifImage = require('exif').ExifImage;
         new ExifImage({ image: file }, function (error, exifData) {
             if (error) {
                 console.log('Error: ' + error.message);
+                if(error.message.substring("No Exif segment")<0) return;
+                noExif = true;
             }
             else {
-                var creationDateTime = "", creationDate = "", creationTime = "", baseName = "";
-                var noExif = isEmpty(exifData.exif.DateTimeOriginal);
-                // console.log(exifData.exif.DateTimeOriginal);
-                if (noExif) {
-                    baseName = path.basename(file);
-                    var mtime = fs.statSync(file).mtime;
-                    creationDate = toChinaDate(mtime);
-                    creationTime = toChinaTime(mtime);
-                }
-                else {
-                    creationDateTime = exifData.exif.DateTimeOriginal.split(" ");
-                    creationDate = creationDateTime[0].replace(/:/g, "/");
-                    creationTime = creationDateTime[1].replace(/:/g, "_");
-                }
-
-                var location = "";
-                if (!isEmpty(exifData.gps)) {
+                noExif = util.isEmpty(exifData.exif.DateTimeOriginal);
+            }
+            if (noExif) {
+                baseName = path.basename(file);
+                var mtime = fs.statSync(file).mtime;
+                creationDate = util.toChinaDate(mtime);
+                creationTime = util.toChinaTime(mtime);
+                nfn = baseName + "-" + creationTime + ".jpg";
+            }
+            else {
+                creationDateTime = exifData.exif.DateTimeOriginal.split(" ");
+                creationDate = creationDateTime[0].replace(/:/g, "/");
+                creationTime = creationDateTime[1].replace(/:/g, "_");
+                if (!util.isEmpty(exifData.gps)) {
                     location = exifData.gps.GPSLatitude.join("_") + "_" + exifData.gps.GPSLongitude.join("_");
                 }
-
-                var nfn = ""
-                if (noExif) {
-                    nfn = baseName + "-" + creationTime + ".jpg";
-                }
-                else {
-                    nfn = creationTime + "-" + location + ".jpg";
-                }
-
-                return cb(file, [creationDate, nfn]);
+                nfn = creationTime + "-" + location + ".jpg";
             }
+
+            return cb(file, [creationDate, nfn]);
         });
     } catch (error) {
         console.log('Error: ' + error.message, file);
@@ -158,20 +154,19 @@ window.onload = function () {
         unload: false
     });
 
-    const isImport = true;
+    const isImport = false;
 
     bindSelectFolderClick(function (folderPath) {
         hideSelectFolderButton();
 
         if (!isImport) folderPath = "./photos/thumbnails";
-        const util = require('./lib/util.js')
 
         util.filewalker(folderPath, function (err, files) {
             if (err) {
                 console.log(err);
                 return;
             }
-            
+
             util.findImageFiles(files, folderPath, function (imageFiles) {
                 // console.log(imageFiles);
                 imageFiles.forEach(function (file, index) {
