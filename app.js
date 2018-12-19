@@ -73,7 +73,7 @@ function displayPhotoInFullView(photo) {
 // fn: file name, nfn: new file name
 // nDir: new directory, tDir: thumbnail directory
 function duplicatePhoto(fn) {
-    util.newFileName(fn, function (fn, nfn) {
+    util.newFileName(fn, async function (fn, nfn) {
         const nDir = "./photos/normal/";
         mkdirp(path.dirname(nDir + nfn), function (err) {
             if (err) console.error(err)
@@ -82,17 +82,20 @@ function duplicatePhoto(fn) {
         });
 
         const tDir = "./photos/thumbnails/";
-        Jimp.read(fn)
-            .then(lenna => {
-                // console.log(fn, tDir + "/" + nfn);
-                return lenna
-                    .resize(512, 384) // resize
-                    .quality(80) // set JPEG quality
-                    .write(tDir + "/" + nfn); // save
-            })
-            .catch(err => {
-                console.error(err);
-            });
+        var image = await Jimp.read(fn);
+        image.resize(512, Jimp.AUTO).write(tDir + "/" + nfn);
+
+        // Jimp.read(fn)
+        //     .then(lenna => {
+        //         // console.log(fn, tDir + "/" + nfn);
+        //         return lenna
+        //             .resize(512, 384) // resize
+        //             .quality(80) // set JPEG quality
+        //             .write(tDir + "/" + nfn); // save
+        //     })
+        //     .catch(err => {
+        //         console.error(err);
+        //     });
 
     });
 }
@@ -105,7 +108,7 @@ window.onload = function () {
         unload: false
     });
 
-    const isImport = true;
+    const isImport = false;
 
     bindSelectFolderClick(function (folderPath) {
         hideSelectFolderButton();
