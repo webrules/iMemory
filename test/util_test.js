@@ -47,7 +47,7 @@ test('IsEmpty should return true for null and empty string', function (t) {
 test('FileWalker should return all the files recursively in a given directory', function(t) {
     util.filewalker("./samples", function (err, files) {
         // console.log(files);
-        t.equal(files.length, 17, "there should be 17 files in the samples folder")
+        t.equal(files.length, 16, "there should be 16 files in the samples folder")
     });
     t.end()
 });
@@ -58,7 +58,7 @@ test('FindImageFiles should return all the image files in a given array', functi
         // console.log(files);
         util.findImageFiles(files, folderPath, function (imageFiles) {
             // console.log(imageFiles);
-            t.equal(imageFiles.length, 10, "there should be 10 photo files in the samples folder")
+            t.equal(imageFiles.length, 9, "there should be 9 photo files in the samples folder")
         });
     });
     t.end()

@@ -10,6 +10,8 @@ function addImageToPhotosArea(file) {
     var photosArea = document.getElementById('photos');
     var template = document.querySelector('#photo-template');
     template.content.querySelector('img').src = 'images/blank.gif';
+
+    //these two elements will be used by echo for lazy loading later
     template.content.querySelector('img').setAttribute('data-echo', file.path);
     template.content.querySelector('img').setAttribute('data-name', file.name);
     var clone = window.document.importNode(template.content, true);
