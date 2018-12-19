@@ -23,11 +23,11 @@ test('ToChinaDate should return as a string of yyyy/mm/dd', function (t) {
 });
 
 test('ToChinaTime should return as a string of hh_mm_ss', function (t) {
-    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,2,3))),"01_02_03","01:02:03 should be 01_02_03")
-    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,2,25))),"01_02_25","01:02:25 should be 01_02_25")
-    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,10,36))),"01_10_36","01:10:36 should be 01_10_36")
-    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,12,2,3))),"12_02_03","12:02:03 should be 12_02_03")
-    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,18,24,48))),"18_24_48","18:24:48 should be 18_24_48")
+    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,2,3))),"010203","01:02:03 should be 01_02_03")
+    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,2,25))),"010225","01:02:25 should be 01_02_25")
+    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,1,10,36))),"011036","01:10:36 should be 01_10_36")
+    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,12,2,3))),"120203","12:02:03 should be 12_02_03")
+    t.equal(util.toChinaTime(new Date(Date.UTC(2018,1,1,18,24,48))),"182448","18:24:48 should be 18_24_48")
     t.end()
 });
 
@@ -47,7 +47,7 @@ test('IsEmpty should return true for null and empty string', function (t) {
 test('FileWalker should return all the files recursively in a given directory', function(t) {
     util.filewalker("./samples", function (err, files) {
         // console.log(files);
-        t.equal(files.length, 16, "there should be 16 files in the samples folder")
+        t.equal(files.length, 18, "there should be 18 files in the samples folder")
     });
     t.end()
 });
@@ -58,8 +58,24 @@ test('FindImageFiles should return all the image files in a given array', functi
         // console.log(files);
         util.findImageFiles(files, folderPath, function (imageFiles) {
             // console.log(imageFiles);
-            t.equal(imageFiles.length, 9, "there should be 9 photo files in the samples folder")
+            t.equal(imageFiles.length, 11, "there should be 11 photo files in the samples folder")
         });
+    });
+    t.end()
+});
+
+test('Photo without exif data use its modification time as the base file name', function(t) {
+    var file = "./samples/dessert.jpg";
+    util.newFileName(file, function(file, newFileName){
+        t.equal(newFileName, "2018/12/19/dessert-161002.jpg","test dessert.jpg without exif")
+    });
+    t.end()
+});
+
+test('Photo with exif data will have its time and GPS in the new file name', function(t) {
+    var file = "./samples/Object/IMG_5445.JPG";
+    util.newFileName(file, function(file, newFileName){
+        t.equal(newFileName, "2017/01/14/IMG_5445-163159-31.14.33.1_121.23.52.42.jpg","test dessert.jpg with exif")
     });
     t.end()
 });

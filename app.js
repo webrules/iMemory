@@ -1,6 +1,5 @@
 'use strict';
 const fs = require('fs');
-const mime = require('mime');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const Jimp = require('jimp');
@@ -74,7 +73,7 @@ function displayPhotoInFullView(photo) {
 // fn: file name, nfn: new file name
 // nDir: new directory, tDir: thumbnail directory
 function duplicatePhoto(fn) {
-    newFileName(fn, function (fn, nfn) {
+    util.newFileName(fn, function (fn, nfn) {
         const nDir = "./photos/normal/";
         mkdirp(path.dirname(nDir + nfn), function (err) {
             if (err) console.error(err)
@@ -96,46 +95,6 @@ function duplicatePhoto(fn) {
             });
 
     });
-}
-
-async function newFileName(file, cb) {
-    var noExif = false;
-    var creationDateTime = "", creationDate = "", creationTime = "", baseName = "";
-    var location = "", nfn = "";
-
-    try {
-        var ExifImage = require('exif').ExifImage;
-        new ExifImage({ image: file }, function (error, exifData) {
-            if (error) {
-                console.log('Error: ' + error.message);
-                if (error.message.substring("No Exif segment") < 0) return;
-                noExif = true;
-            }
-            else {
-                noExif = util.isEmpty(exifData.exif.DateTimeOriginal);
-            }
-            baseName = path.basename(file);
-            if (noExif) {
-                var mtime = fs.statSync(file).mtime;
-                creationDate = util.toChinaDate(mtime);
-                creationTime = util.toChinaTime(mtime);
-                nfn = baseName + "-" + creationTime + ".jpg";
-            }
-            else {
-                creationDateTime = exifData.exif.DateTimeOriginal.split(" ");
-                creationDate = creationDateTime[0].replace(/:/g, "/");
-                creationTime = creationDateTime[1].replace(/:/g, "_");
-                if (!util.isEmpty(exifData.gps)) {
-                    location = exifData.gps.GPSLatitude.join("_") + "_" + exifData.gps.GPSLongitude.join("_");
-                }
-                nfn = baseName + "-" + creationTime + "-" + location + ".jpg";
-            }
-
-            return cb(file, creationDate + "/" + nfn);
-        });
-    } catch (error) {
-        console.log('Error: ' + error.message, file);
-    }
 }
 
 window.onload = function () {
