@@ -69,61 +69,51 @@ function displayPhotoInFullView(photo) {
     document.querySelector('#fullViewPhoto').style.display = 'block';
 }
 
-function organizePhotos(fn){
+// fn: file name, nfn: new file name
+// nDir: new directory, tDir: thumbnail directory
+function duplicatePhoto(fn) {
     newFileName(fn, function (fn, nfn) {
-        var dir = "./photos/normal/" + nfn[0];
-        mkdirp(dir, function (err) {
+        const nDir = "./photos/normal/";
+        mkdirp(path.dirname(nDir + nfn), function (err) {
             if (err) console.error(err)
-            var newName = nfn[1];
-            fs.copyFile(fn, dir + "/" + newName,function(){})
-            console.log("copy photos ", fn, dir + "/" + newName)
-          });
-    });
-}
-
-function genThumbnails(fn) {
-    // console.log("gen thumbnail for ", fn);
-    newFileName(fn, function (fn, nfn) {
-        var dir = "./photos/thumbnails/" + nfn[0];
-        mkdirp(dir, function (err) {
-            if (err) console.error(err)
-            var newName = nfn[1];
-            // console.log(dir, newName);
-
-            Jimp.read(fn)
-                .then(lenna => {
-                    console.log(fn, dir + "/" + newName);
-                    // saveToDb(fn, dir + "/" + newName);
-                    return lenna
-                        .resize(512, 384) // resize
-                        .quality(80) // set JPEG quality
-                        .write(dir + "/" + newName); // save
-                })
-                .catch(err => {
-                    console.error(err);
-                });
+            fs.copyFile(fn, nDir +"/" + nfn, function () { })
+            // console.log("copy photos ", fn, nDir +"/" + nfn)
         });
+
+        const tDir = "./photos/thumbnails/";
+        Jimp.read(fn)
+            .then(lenna => {
+                // console.log(fn, tDir + "/" + nfn);
+                return lenna
+                    .resize(512, 384) // resize
+                    .quality(80) // set JPEG quality
+                    .write(tDir + "/" + nfn); // save
+            })
+            .catch(err => {
+                console.error(err);
+            });
+
     });
 }
 
 async function newFileName(file, cb) {
     var noExif = false;
-    var creationDateTime="", creationDate="", creationTime="", baseName="";
-    var location="", nfn="";
-    
+    var creationDateTime = "", creationDate = "", creationTime = "", baseName = "";
+    var location = "", nfn = "";
+
     try {
         var ExifImage = require('exif').ExifImage;
         new ExifImage({ image: file }, function (error, exifData) {
             if (error) {
                 console.log('Error: ' + error.message);
-                if(error.message.substring("No Exif segment")<0) return;
+                if (error.message.substring("No Exif segment") < 0) return;
                 noExif = true;
             }
             else {
                 noExif = util.isEmpty(exifData.exif.DateTimeOriginal);
             }
+            baseName = path.basename(file);
             if (noExif) {
-                baseName = path.basename(file);
                 var mtime = fs.statSync(file).mtime;
                 creationDate = util.toChinaDate(mtime);
                 creationTime = util.toChinaTime(mtime);
@@ -136,10 +126,10 @@ async function newFileName(file, cb) {
                 if (!util.isEmpty(exifData.gps)) {
                     location = exifData.gps.GPSLatitude.join("_") + "_" + exifData.gps.GPSLongitude.join("_");
                 }
-                nfn = creationTime + "-" + location + ".jpg";
+                nfn = baseName + "-" + creationTime + "-" + location + ".jpg";
             }
 
-            return cb(file, [creationDate, nfn]);
+            return cb(file, creationDate + "/" + nfn);
         });
     } catch (error) {
         console.log('Error: ' + error.message, file);
@@ -154,7 +144,7 @@ window.onload = function () {
         unload: false
     });
 
-    const isImport = false;
+    const isImport = true;
 
     bindSelectFolderClick(function (folderPath) {
         hideSelectFolderButton();
@@ -168,12 +158,10 @@ window.onload = function () {
             }
 
             util.findImageFiles(files, folderPath, function (imageFiles) {
-                // console.log(imageFiles);
                 imageFiles.forEach(function (file, index) {
-                addImageToPhotosArea(file);
+                    addImageToPhotosArea(file);
                     if (isImport) {
-                        organizePhotos(file.name);
-                        genThumbnails(file.name);
+                        duplicatePhoto(file.name);
                     }
                     if (index === imageFiles.length - 1) {
                         echo.render();
@@ -181,7 +169,7 @@ window.onload = function () {
                     }
                 });
             });
-            
+
         });
     });
 };
